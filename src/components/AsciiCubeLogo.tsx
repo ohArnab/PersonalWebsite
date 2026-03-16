@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from "react";
 
-export default function AsciiCubeScreen() {
+export default function AsciiCubeLogo() {
   const preRef = useRef<HTMLPreElement>(null);
   const angles = useRef({ A: 0, B: 0, C: 0 });
 
   // Resolution tuned for a 150x150px area
-  // We use a 2:1 ratio (40 width, 20 height) so the cube looks square
   const width = 40; 
   const height = 20;
   const K1 = 20; // Scale factor for projection
