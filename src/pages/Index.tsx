@@ -1,13 +1,19 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import BootScreen from '@/components/BootScreen';
+import Terminal from '@/components/Terminal';
+import GUIMode from '@/components/GUIMode';
+
+type AppMode = 'boot' | 'terminal' | 'gui';
 
 const Index = () => {
+  const [mode, setMode] = useState<AppMode>('boot');
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <>
+      {mode === 'boot' && <BootScreen onComplete={(m) => setMode(m)} />}
+      {mode === 'terminal' && <Terminal onSwitchToGUI={() => setMode('gui')} />}
+      {mode === 'gui' && <GUIMode onSwitchToTerminal={() => setMode('terminal')} />}
+    </>
   );
 };
 
