@@ -11,15 +11,17 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install bun
+      - name: Install Bun
         uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies
@@ -38,7 +40,8 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Copy index.html to 404.html (SPA routing fix)
+      # SPA routing fix (important for React/Vite apps)
+      - name: Copy index.html to 404.html
         run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
