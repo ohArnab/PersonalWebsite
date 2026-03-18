@@ -50,6 +50,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        terminal: {
+          green: "hsl(var(--terminal-green))",
+          pink: "hsl(var(--terminal-pink))",
+          blue: "hsl(var(--terminal-blue))",
+          yellow: "hsl(var(--terminal-yellow))",
+          red: "hsl(var(--terminal-red))",
+          cyan: "hsl(var(--terminal-cyan))",
+          prompt: "hsl(var(--terminal-prompt))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

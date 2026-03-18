@@ -403,7 +403,7 @@ Just kidding. But seriously, let's talk!
 
   const renderLine = (line: TerminalLine, i: number) => {
     let className = 'whitespace-pre-wrap break-all ';
-    if (line.type === 'prompt') className += 'text-terminal-blue';
+    if (line.type === 'prompt') className += 'text-terminal-prompt';
     else if (line.type === 'error') className += 'text-terminal-red';
     else if (line.type === 'system') className += 'text-terminal-yellow';
     else if (line.color === 'green') className += 'text-terminal-green';
@@ -478,7 +478,7 @@ Just kidding. But seriously, let's talk!
 
         {/* Input line */}
         <div className="flex items-center">
-          <span className="text-terminal-blue whitespace-pre">{prompt}</span>
+          <span className="text-terminal-prompt whitespace-pre">{prompt}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}
