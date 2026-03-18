@@ -15,7 +15,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={process.env.NODE_ENV === 'production' ? '/PersonalWebsite' : '/'}>
         <Routes>
           {/* Boot screen — always entry point at root */}
           <Route path="/" element={<Index />} />
