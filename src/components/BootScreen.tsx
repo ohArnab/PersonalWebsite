@@ -54,9 +54,11 @@ const BootScreen = ({ onComplete }: BootScreenProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 scanline">
       <div className="max-w-2xl w-full space-y-6">
-        <div className="flex justify-center mb-8">
-          <AsciiCube />
-        </div>
+        {!bootDone && (
+          <div className="flex justify-center mb-8">
+            <AsciiCube />
+          </div>
+        )}
 
         <div className="space-y-1 text-sm">
           {bootMessages.slice(0, visibleLines).map((msg, i) => (

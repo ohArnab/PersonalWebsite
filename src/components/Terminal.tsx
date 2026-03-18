@@ -1,5 +1,14 @@
-import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, KeyboardEvent, type CSSProperties } from 'react';
 import { resolvePath, getTree, filesystem, FSNode } from '@/data/filesystem';
+import {
+  DEFAULT_TERMINAL_THEME,
+  TERMINAL_THEME_STORAGE_KEY,
+  formatTerminalThemeMenu,
+  isTerminalTheme,
+  terminalThemeNames,
+  terminalThemes,
+  type TerminalThemeName,
+} from '@/data/terminalThemes';
 
 interface TerminalLine {
   type: 'prompt' | 'output' | 'error' | 'system';
@@ -9,9 +18,12 @@ interface TerminalLine {
 
 interface TerminalProps {
   onSwitchToGUI: () => void;
+  onClose: () => void;
+  onMinimize: () => void;
+  onResetToBoot: () => void;
 }
 
-const NEOFETCH = `
+const buildNeofetch = (theme: TerminalThemeName) => `
   \x1b[green]    ___                    __     \x1b[reset]  arnab@portfolio
   \x1b[green]   /   |  _________  ____ / /_    \x1b[reset]  ─────────────────
   \x1b[green]  / /| | / ___/ __ \\/ __ '/ __ \\  \x1b[reset]  OS: ArnabOS v1.0
@@ -19,47 +31,55 @@ const NEOFETCH = `
   \x1b[green]/_/  |_/_/  /_/ /_/\\__,_/_.___/   \x1b[reset]  Terminal: web-term
   \x1b[reset]                                    Uptime: since you arrived
                                      Packages: projects(3)
-                                     Theme: hacker-dark
+                                     Theme: ${theme}
 `;
 
 const HELP_TEXT = `
 Available commands:
 
-  Navigation
-  ──────────
+  🗂️  Navigation
+  ──────────────
   ls              List directory contents
   cd <dir>        Change directory
   pwd             Print working directory
   tree            Show directory tree
   clear           Clear terminal
 
-  File Viewing
-  ──────────
+  📄  File Viewing
+  ────────────────
   cat <file>      Display file contents
 
-  System
+  ⚙️  System
   ──────────
   help            Show this help message
   whoami          Display user info
   neofetch        System information
   history         Command history
 
-  Portfolio
-  ──────────
+  🚀  Portfolio
+  ─────────────
   projects        List all projects
   resume          Show resume
   skills          Display skills
   contact         Show contact info
   socials         Show social links
 
-  Other
+  🎨  Other
   ──────────
   gui             Switch to GUI mode
-  theme <name>    Change theme (green/pink/hacker)
+  theme [name]    List themes or change theme
   sudo hire-arnab 😏
 `;
 
-const Terminal = ({ onSwitchToGUI }: TerminalProps) => {
+const Terminal = ({ onSwitchToGUI, onClose, onMinimize, onResetToBoot }: TerminalProps) => {
+  const [theme, setTheme] = useState<TerminalThemeName>(() => {
+    if (typeof window === 'undefined') {
+      return DEFAULT_TERMINAL_THEME;
+    }
+
+    const savedTheme = window.localStorage.getItem(TERMINAL_THEME_STORAGE_KEY);
+    return isTerminalTheme(savedTheme ?? undefined) ? (savedTheme as TerminalThemeName) : DEFAULT_TERMINAL_THEME;
+  });
   const [lines, setLines] = useState<TerminalLine[]>([
     { type: 'system', text: 'ArnabOS Terminal v1.0 — Type "help" for commands.' },
     { type: 'system', text: '' },
@@ -81,6 +101,10 @@ const Terminal = ({ onSwitchToGUI }: TerminalProps) => {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(TERMINAL_THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   const addOutput = useCallback((text: string, type: TerminalLine['type'] = 'output', color?: string) => {
     setLines((prev) => [...prev, { type, text, color }]);
@@ -196,7 +220,7 @@ const Terminal = ({ onSwitchToGUI }: TerminalProps) => {
         }
 
         case 'neofetch':
-          addOutput(NEOFETCH, 'output', 'green');
+          addOutput(buildNeofetch(theme), 'output', 'green');
           break;
 
         case 'history':
@@ -221,27 +245,39 @@ const Terminal = ({ onSwitchToGUI }: TerminalProps) => {
         }
 
         case 'skills':
-          addOutput(`Skills
-══════
+          addOutput(`
+🛠️  Skills
+══════════
 
-Programming:
-  • Python
-  • JavaScript
-  • PowerShell
-  • TypeScript
+📝 Languages:
+  • Python  • Java  • JavaScript  • TypeScript
+  • SQL  • C  • Rust  • Bash  • PowerShell
 
-Infrastructure:
-  • VMware vSphere
-  • Windows Server
-  • Active Directory
-  • Linux
+⚛️  Frameworks & Libraries:
+  • React  • Flask  • Express.js  • Node.js
+  • REST  • GraphQL  • Bootstrap
 
-Automation & Tools:
-  • PowerCLI
-  • Ansible
-  • Docker
-  • Terraform
-  • Git`);
+🐳 DevOps & Tools:
+  • Docker  • CI/CD  • Kubernetes  • PowerCLI
+  • Ansible  • Git  • Agile  • Nginx
+
+🧪 Testing:
+  • PyTest  • Jest  • Mocha  • Selenium
+
+🗄️  Databases:
+  • Oracle SQL  • PostgreSQL  • MySQL  • MongoDB
+
+☁️  Cloud & Infrastructure:
+  • VMware vSphere/ESXi  • Windows Server (AD, WSUS)
+  • Ubuntu  • CentOS  • Azure Fundamentals
+
+🤖 Data & ML:
+  • TensorFlow  • Scikit-learn  • Pandas  • NumPy
+  • XGBoost  • Reinforcement Learning
+
+🔧 Other Tools:
+  • Salesforce CRM  • JIRA  • ServiceNow
+  • Tableau  • Excel (VBA, Pivot Tables)`);
           break;
 
         case 'contact':
@@ -269,7 +305,7 @@ Opening email client...
 Preparing offer letter template...
 
 Just kidding. But seriously, let's talk!
-→ arnab@email.com`, 'output', 'pink');
+→ arnab.snath@gmail.com`, 'output', 'pink');
           } else {
             addOutput(`sudo: command not found: ${args.join(' ')}`, 'error');
           }
@@ -280,10 +316,13 @@ Just kidding. But seriously, let's talk!
           break;
 
         case 'theme':
-          if (args[0] === 'green' || args[0] === 'pink' || args[0] === 'hacker') {
+          if (!args[0]) {
+            addOutput(formatTerminalThemeMenu(theme), 'system');
+          } else if (isTerminalTheme(args[0])) {
+            setTheme(args[0]);
             addOutput(`Theme set to: ${args[0]}`, 'system');
           } else {
-            addOutput('Available themes: green, pink, hacker', 'system');
+            addOutput(`Unknown theme: ${args[0]}\n\n${formatTerminalThemeMenu(theme)}`, 'error');
           }
           break;
 
@@ -291,7 +330,7 @@ Just kidding. But seriously, let's talk!
           addOutput(`command not found: ${command}. Type "help" for available commands.`, 'error');
       }
     },
-    [currentDir, commandHistory, addOutput, prompt, onSwitchToGUI]
+    [currentDir, commandHistory, addOutput, prompt, onSwitchToGUI, theme]
   );
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -333,6 +372,16 @@ Just kidding. But seriously, let's talk!
           addOutput(prompt + input, 'prompt');
           addOutput(matches.join('  '));
         }
+      } else if (parts[0] === 'theme') {
+        const matches = terminalThemeNames.filter((themeName) => themeName.startsWith(lastPart.toLowerCase()));
+
+        if (matches.length === 1) {
+          parts[parts.length - 1] = matches[0];
+          setInput(parts.join(' '));
+        } else if (matches.length > 1) {
+          addOutput(prompt + input, 'prompt');
+          addOutput(matches.join('  '), 'system');
+        }
       } else {
         // autocomplete paths
         const dir = lastPart.includes('/') ? lastPart.substring(0, lastPart.lastIndexOf('/') + 1) : '';
@@ -372,14 +421,43 @@ Just kidding. But seriously, let's talk!
     <div
       className="min-h-screen bg-background flex flex-col scanline"
       onClick={() => inputRef.current?.focus()}
+      style={terminalThemes[theme].vars as CSSProperties}
+      data-theme={theme}
     >
       {/* Title bar */}
       <div className="bg-muted border-b border-border px-4 py-2 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-destructive inline-block" />
-            <span className="w-3 h-3 rounded-full bg-[hsl(39,100%,50%)] inline-block" />
-            <span className="w-3 h-3 rounded-full bg-primary inline-block" />
+            <button
+              type="button"
+              aria-label="Close terminal"
+              title="Close terminal"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="w-3 h-3 rounded-full bg-destructive inline-block transition-transform hover:scale-110"
+            />
+            <button
+              type="button"
+              aria-label="Minimize terminal"
+              title="Minimize terminal"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMinimize();
+              }}
+              className="w-3 h-3 rounded-full bg-[hsl(39,100%,50%)] inline-block transition-transform hover:scale-110"
+            />
+            <button
+              type="button"
+              aria-label="Reset to boot screen"
+              title="Reset to boot screen"
+              onClick={(e) => {
+                e.stopPropagation();
+                onResetToBoot();
+              }}
+              className="w-3 h-3 rounded-full bg-primary inline-block transition-transform hover:scale-110"
+            />
           </div>
           <span className="text-muted-foreground ml-3">arnab@portfolio: ~</span>
         </div>
