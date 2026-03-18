@@ -29,7 +29,7 @@ const GUIMode = ({ activeSection, onSectionChange, onSwitchToTerminal, showMinim
               className="shrink-0 transition-opacity hover:opacity-90"
             >
               <img
-                src="/Asnath.ico"
+                src={`${import.meta.env.BASE_URL}Asnath.ico`}
                 alt="Asnath icon"
                 className="h-8 w-8 object-contain"
               />
